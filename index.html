@@ -226,7 +226,6 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
         import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 
-        // FIREBASE CONFIG
         const firebaseConfig = {
             apiKey: "AIzaSyDh_g2Z8p1OnqzS4n_EciOU2aVuHdhQYfc",
             authDomain: "agendakeepers.firebaseapp.com",
@@ -259,7 +258,6 @@
         document.getElementById('btnWeek').classList.toggle('active', viewMode === 'week');
         document.getElementById('btnMonth').classList.toggle('active', viewMode === 'month');
 
-        // SINCRONIZACIÓN FIREBASE REALTIME
         const eventsRef = ref(db, 'events/');
         onValue(eventsRef, (snapshot) => {
             eventsDB = snapshot.val() || {};
@@ -536,9 +534,10 @@
             </div>`;
         }
 
+        // --- WHATSAPP CORREGIDO A PRUEBA DE EMOJIS ROTOS ---
         window.shareEvent = function(id) {
             const key = getKeyFromDate(currentDate);
-            const ev = eventsDB[key].find(e => e.id == id);
+            const ev = eventsDB[key].find(e => String(e.id) === String(id));
             if(!ev) return;
 
             let header = "⚽ AGENDA PORTEROS ATM";
@@ -550,21 +549,35 @@
             const d = new Date(key);
             const dateStr = d.toLocaleDateString('es-ES'); 
 
-            let text = `${header}\n\n`;
-            text += `🧤 *Portero:* Porteros ATM\n`; 
-            text += `👥 *Equipo:* ${ev.team || 'Todos'}\n`;
-            text += `📝 *Motivo:* ${ev.title}\n`;
-            text += `🏟️ *Sede:* ${ev.subtitle || 'Ciudad Deportiva'}\n`;
-            text += `📅 *Fecha:* ${dateStr}\n`;
-            text += `⏰ *Hora:* ${ev.timeStart} - ${ev.timeEnd}\n`;
+            // Se usa un array para unir las líneas sin problemas de saltos de línea ocultos
+            const lines = [
+                `*${header}*`,
+                ``,
+                `🧤 *Portero:* Porteros ATM`,
+                `👥 *Equipo:* ${ev.team || 'Todos'}`,
+                `📝 *Motivo:* ${ev.title}`,
+                `🏟️ *Sede:* ${ev.subtitle || 'Ciudad Deportiva'}`,
+                `📅 *Fecha:* ${dateStr}`,
+                `⏰ *Hora:* ${ev.timeStart} - ${ev.timeEnd}`
+            ];
 
             if(ev.weather) {
                 const wMap = { 'sun': '☀️ Sol', 'cloud': '☁️ Nubes', 'rain': '🌧️ Lluvia', 'snow': '❄️ Nieve', 'wind': '💨 Viento' };
-                if(wMap[ev.weather]) text += `🌦 *Clima:* ${wMap[ev.weather]}\n`;
+                if(wMap[ev.weather]) lines.push(`🌦 *Clima:* ${wMap[ev.weather]}`);
             }
 
-            const url = `https://wa.me/?text=${encodeURIComponent(text)}`;
-            window.open(url, '_blank');
+            const text = lines.join('\n');
+            const encodedText = encodeURIComponent(text);
+
+            // DETECCIÓN DE DISPOSITIVO: Si es móvil, usa el protocolo nativo (whatsapp://)
+            // Si es PC, usa la API web. Esto soluciona los emojis rotos en Safari/iOS/Android.
+            const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+            
+            if (isMobile) {
+                window.location.href = `whatsapp://send?text=${encodedText}`;
+            } else {
+                window.open(`https://api.whatsapp.com/send?text=${encodedText}`, '_blank');
+            }
         }
 
         window.selectDate = function(date) { currentDate = date; updateHeader(); renderDates(); renderEventsList(); }
@@ -662,7 +675,7 @@
 
         window.openFile = function(eventId) {
             const key = getKeyFromDate(currentDate);
-            const event = eventsDB[key].find(e => e.id == eventId);
+            const event = eventsDB[key].find(e => String(e.id) === String(eventId));
             if(event && event.fileData) {
                 const win = window.open();
                 win.document.write('<iframe src="' + event.fileData + '" frameborder="0" style="border:0; top:0px; left:0px; bottom:0px; right:0px; width:100%; height:100%;" allowfullscreen></iframe>');
@@ -692,7 +705,6 @@
             if (event.type === 'match') { document.getElementById('inputComp').value = event.competition || 'LIGA'; document.getElementById('inputRival').value = event.rival || ''; }
             if (event.type === 'meeting') { if (event.link) { window.toggleMeetingMode('online'); document.getElementById('inputLink').value = event.link; } else window.toggleMeetingMode('presencial'); }
 
-            // CORRECCIÓN PREVENCIÓN UNDEFINED
             tempFileBase64 = event.fileData || null; 
 
             if(tempFileBase64) { 
@@ -729,7 +741,7 @@
                             subtitle: document.getElementById('inputSub').value || 'Ubicación Torneo',
                             team: document.getElementById('inputTeam').value || '',
                             timeStart: '', timeEnd: '', colorClass: 'btn-rein', weather: tempWeather, 
-                            fileData: tempFileBase64 || null // PROTECCIÓN FIREBASE
+                            fileData: tempFileBase64 || null 
                         });
                         loopDate.setDate(loopDate.getDate() + 1);
                     }
@@ -754,7 +766,7 @@
                     timeStart: document.getElementById('inputStart').value || '',
                     timeEnd: document.getElementById('inputEnd').value || '',
                     colorClass: tempColor, 
-                    fileData: tempFileBase64 || null, // PROTECCIÓN FIREBASE
+                    fileData: tempFileBase64 || null, 
                     competition: document.getElementById('inputComp').value,
                     rival: document.getElementById('inputRival').value, weather: tempWeather
                 };
