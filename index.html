@@ -10,11 +10,9 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="AgendaKeepers"> 
-    
     <link rel="apple-touch-icon" href="AgendaKeepers.png">
 
     <link rel="stylesheet" href="style.css">
-    
     <link rel="icon" type="image/png" href="ESCUDO ATM.png">
     
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&display=swap" rel="stylesheet">
@@ -427,7 +425,10 @@
                         ev.isCompleted = false;
                         ev.isCurrent = false;
 
-                        if (isToday) {
+                        // Si está cancelado, ignoramos el timeline y cuenta como completado/opaco
+                        if (ev.isCanceled) {
+                            ev.isCompleted = true;
+                        } else if (isToday) {
                             if (ev.type === 'tournament') {
                                 ev.isCurrent = true; 
                                 if (!timelineDrawn) timelineDrawn = true;
@@ -469,8 +470,17 @@
             let subStyle = ''; 
             
             let dynamicClass = '';
-            if (event.isCurrent) dynamicClass = 'card-active-now';
-            if (event.isCompleted) dynamicClass = 'card-completed';
+            let cancelBadge = '';
+
+            // Lógica visual si está Cancelado
+            if (event.isCanceled) {
+                dynamicClass = 'card-completed'; 
+                cancelBadge = `<span class="badge" style="background:#e74c3c; margin-left: 5px;">🚫 CANCELADO</span>`;
+            } else if (event.isCurrent) {
+                dynamicClass = 'card-active-now';
+            } else if (event.isCompleted) {
+                dynamicClass = 'card-completed';
+            }
 
             const weatherIcons = {
                 'sun': '<i class="fas fa-sun" style="color:#f1c40f"></i>',
@@ -492,8 +502,8 @@
                 if(event.rival) displayTitle = `<span style="font-weight:400; font-size:0.9rem; color:#aaa;">VS</span> <span style="color:white;">${event.rival.toUpperCase()}</span>`;
             } 
             else if (isTournament) {
-                cardStyle = 'border: 1px solid #f39c12; background: linear-gradient(135deg, #583e06, #111);';
-                badgeHTML = '<span class="badge" style="background:#f39c12; color:black;">TORNEO</span>';
+                cardStyle = 'border: 1px solid #f1c40f; border-left: 4px solid #f1c40f; background: linear-gradient(135deg, #4A235A, #000000);';
+                badgeHTML = '<span class="badge" style="background:#f1c40f; color:black;">🏆 TORNEO</span>';
                 titleStyle = 'color: #ffffff !important;';
                 subStyle = 'color: #f1c40f !important; font-weight:600;';
             }
@@ -515,26 +525,43 @@
             }
             if(weatherIcon) displaySub += ` • ${weatherIcon}`;
 
-            let checkIcon = event.isCompleted ? '<i class="fas fa-check-circle" style="color:#00ff88; float:right;"></i>' : '';
+            let checkIcon = event.isCompleted && !event.isCanceled ? '<i class="fas fa-check-circle" style="color:#00ff88; float:right;"></i>' : '';
 
+            // Botonera
             let btns = '';
             btns += `<button class="btn-ios-action whatsapp" onclick="window.shareEvent('${event.id}')"><i class="fab fa-whatsapp"></i></button>`;
-            
             if (event.fileData) btns += `<button class="btn-ios-action primary" onclick="window.openFile('${event.id}')"><span>📄 Ver PDF</span></button>`;
             else btns += `<button class="btn-ios-action primary disabled"><span>📄 No PDF</span></button>`;
-            
             btns += `<button class="btn-ios-action secondary" onclick="window.editEvent('${event.id}')"><span>✏️ Editar</span></button>`;
+            
+            // Botón mágico para Cancelar/Restaurar
+            if (event.isCanceled) {
+                btns += `<button class="btn-ios-action secondary" onclick="window.toggleCancel('${event.id}')" style="color: #2ecc71; border-color: rgba(46, 204, 113, 0.3);"><span>✅ Restaurar</span></button>`;
+            } else {
+                btns += `<button class="btn-ios-action secondary" onclick="window.toggleCancel('${event.id}')" style="color: #e74c3c; border-color: rgba(231, 76, 60, 0.3);"><span>🚫 Cancelar</span></button>`;
+            }
 
             return `
             <div class="agenda-card">
                 <div class="time-col">${timeLeft}<div class="vertical-line"></div></div>
                 <div class="card-details modern-card ${dynamicClass}" style="${cardStyle}">
-                    <div class="card-header-row"><div>${badgeHTML}</div> ${checkIcon}</div>
+                    <div class="card-header-row"><div>${badgeHTML}${cancelBadge}</div> ${checkIcon}</div>
                     <h3 class="card-title" style="${titleStyle}">${displayTitle}</h3>
                     <p class="card-subtitle" style="${subStyle}">${displaySub}</p>
                     <div class="card-actions">${btns}</div>
                 </div>
             </div>`;
+        }
+
+        // NUEVA FUNCIÓN CANCELAR EVENTO
+        window.toggleCancel = function(id) {
+            const key = getKeyFromDate(currentDate);
+            const idx = eventsDB[key].findIndex(e => String(e.id) === String(id));
+            if (idx !== -1) {
+                eventsDB[key][idx].isCanceled = !eventsDB[key][idx].isCanceled;
+                saveToCloud();
+                renderEventsList();
+            }
         }
 
         window.shareEvent = function(id) {
@@ -547,6 +574,9 @@
             if (ev.type === 'tournament') header = "🏆 TORNEO ATM";
             if (ev.type === 'meeting') header = "🤝 REUNIÓN ATM";
             if (ev.type === 'gym') header = "💪 GYM ATM";
+            
+            // Etiqueta en WhatsApp si está cancelado
+            if (ev.isCanceled) header = "🚫 [CANCELADO] " + header;
 
             const d = new Date(key);
             const dateStr = d.toLocaleDateString('es-ES'); 
@@ -739,7 +769,8 @@
                             subtitle: document.getElementById('inputSub').value || 'Ubicación Torneo',
                             team: document.getElementById('inputTeam').value || '',
                             timeStart: '', timeEnd: '', colorClass: 'btn-rein', weather: tempWeather, 
-                            fileData: tempFileBase64 || null 
+                            fileData: tempFileBase64 || null,
+                            isCanceled: false // ESTADO CANCELADO POR DEFECTO
                         });
                         loopDate.setDate(loopDate.getDate() + 1);
                     }
@@ -776,11 +807,14 @@
                             eventData.type = 'tournament'; eventData.colorClass = 'btn-rein'; 
                             eventData.timeStart = ''; eventData.timeEnd = '';
                         }
-                        eventsDB[key][idx] = { ...eventData, id: eventsDB[key][idx].id }; 
+                        // MANTENEMOS EL ESTADO DE CANCELADO AL EDITAR
+                        eventsDB[key][idx] = { ...eventData, id: eventsDB[key][idx].id, isCanceled: eventsDB[key][idx].isCanceled || false }; 
                     } else {
                         alert("Error: Actividad no encontrada para editar."); return;
                     }
-                } else { eventsDB[key].push({ ...eventData, id: Date.now() }); }
+                } else { 
+                    eventsDB[key].push({ ...eventData, id: Date.now(), isCanceled: false }); 
+                }
 
                 eventsDB[key].sort((a,b) => (a.timeStart || "").localeCompare(b.timeStart || ""));
                 saveToCloud();
