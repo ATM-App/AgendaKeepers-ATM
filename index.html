@@ -248,7 +248,7 @@
         let tempColor = 'btn-of';
         let tempWeather = 'sun';
         let meetingMode = 'presencial';
-        let renderTimeout = null; // VARIABLE ANTIRREBOTE AÑADIDA
+        let renderTimeout = null;
 
         const storedTheme = localStorage.getItem('agenda_theme');
         if (storedTheme === 'light') {
@@ -416,11 +416,10 @@
 
             container.classList.add('loading');
             
-            // SISTEMA ANTIRREBOTE: Evita que se dibuje doble si Firebase avisa varias veces muy rápido
             if (renderTimeout) clearTimeout(renderTimeout);
             
             renderTimeout = setTimeout(() => {
-                container.innerHTML = ''; // BORRADO JUSTO ANTES DE DIBUJAR PARA EVITAR DUPLICADOS
+                container.innerHTML = ''; 
                 container.classList.remove('loading');
                 
                 if (events.length === 0) {
@@ -554,13 +553,12 @@
             </div>`;
         }
 
-        // LÓGICA CANCELAR SIN DOBLE RENDERIZADO MANUAL
         window.toggleCancel = function(id) {
             const key = getKeyFromDate(currentDate);
             const idx = eventsDB[key].findIndex(e => String(e.id) === String(id));
             if (idx !== -1) {
                 eventsDB[key][idx].isCanceled = !eventsDB[key][idx].isCanceled;
-                saveToCloud(); // Al guardar, onValue se encarga de llamar a renderEventsList una sola vez.
+                saveToCloud(); 
             }
         }
 
@@ -700,13 +698,75 @@
             }
         }
 
+        // --- APERTURA ROBUSTA DE PDF/IMAGEN PARA MÓVILES ---
         window.openFile = function(eventId) {
             const key = getKeyFromDate(currentDate);
             const event = eventsDB[key].find(e => String(e.id) === String(eventId));
-            if(event && event.fileData) {
+            if(!event || !event.fileData) {
+                alert("Error al abrir archivo");
+                return;
+            }
+
+            const dataUrl = event.fileData;
+
+            // SI ES IMAGEN (La mostramos centrada y ajustada en una pestaña nueva)
+            if (dataUrl.startsWith('data:image')) {
                 const win = window.open();
-                win.document.write('<iframe src="' + event.fileData + '" frameborder="0" style="border:0; top:0px; left:0px; bottom:0px; right:0px; width:100%; height:100%;" allowfullscreen></iframe>');
-            } else alert("Error al abrir archivo");
+                if (win) {
+                    win.document.write(`
+                        <!DOCTYPE html>
+                        <html>
+                        <head>
+                            <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+                            <title>Documento</title>
+                            <style>
+                                body { margin: 0; padding: 0; background: #111a36; display: flex; justify-content: center; align-items: center; height: 100vh; }
+                                img { max-width: 100%; max-height: 100%; object-fit: contain; }
+                            </style>
+                        </head>
+                        <body>
+                            <img src="${dataUrl}" alt="Documento">
+                        </body>
+                        </html>
+                    `);
+                    win.document.close();
+                } else {
+                    alert("Desactiva el bloqueo de ventanas emergentes para ver la imagen.");
+                }
+            } 
+            // SI ES PDF (Convertimos el Base64 a un Archivo Real 'Blob' para que el móvil lo lea bien)
+            else if (dataUrl.startsWith('data:application/pdf')) {
+                try {
+                    const parts = dataUrl.split(',');
+                    const b64Data = parts[1];
+                    const contentType = parts[0].split(':')[1].split(';')[0];
+                    
+                    const byteCharacters = atob(b64Data);
+                    const byteNumbers = new Array(byteCharacters.length);
+                    for (let i = 0; i < byteCharacters.length; i++) {
+                        byteNumbers[i] = byteCharacters.charCodeAt(i);
+                    }
+                    const byteArray = new Uint8Array(byteNumbers);
+                    const blob = new Blob([byteArray], {type: contentType});
+                    const blobUrl = URL.createObjectURL(blob);
+
+                    const link = document.createElement('a');
+                    link.href = blobUrl;
+                    link.target = '_blank'; 
+                    link.download = event.title ? event.title.replace(/ /g, '_') + '.pdf' : 'documento.pdf';
+                    
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    
+                    setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
+                } catch (e) {
+                    // Si falla el Blob, intentamos abrir directo en PC
+                    window.open(dataUrl, '_blank');
+                }
+            } else {
+                 window.open(dataUrl, '_blank');
+            }
         }
 
         window.editEvent = function(id) {
