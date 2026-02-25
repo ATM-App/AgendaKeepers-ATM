@@ -698,7 +698,7 @@
             }
         }
 
-        // --- APERTURA ROBUSTA DE PDF/IMAGEN PARA MÓVILES ---
+        // --- APERTURA DE ARCHIVOS (VISOR NATIVO SIN DESCARGA OBLIGADA) ---
         window.openFile = function(eventId) {
             const key = getKeyFromDate(currentDate);
             const event = eventsDB[key].find(e => String(e.id) === String(eventId));
@@ -709,7 +709,6 @@
 
             const dataUrl = event.fileData;
 
-            // SI ES IMAGEN (La mostramos centrada y ajustada en una pestaña nueva)
             if (dataUrl.startsWith('data:image')) {
                 const win = window.open();
                 if (win) {
@@ -734,12 +733,11 @@
                     alert("Desactiva el bloqueo de ventanas emergentes para ver la imagen.");
                 }
             } 
-            // SI ES PDF (Convertimos el Base64 a un Archivo Real 'Blob' para que el móvil lo lea bien)
             else if (dataUrl.startsWith('data:application/pdf')) {
                 try {
                     const parts = dataUrl.split(',');
                     const b64Data = parts[1];
-                    const contentType = parts[0].split(':')[1].split(';')[0];
+                    const contentType = 'application/pdf';
                     
                     const byteCharacters = atob(b64Data);
                     const byteNumbers = new Array(byteCharacters.length);
@@ -750,18 +748,18 @@
                     const blob = new Blob([byteArray], {type: contentType});
                     const blobUrl = URL.createObjectURL(blob);
 
+                    // Al quitar el "download", forzamos al navegador a intentar abrirlo en una pestaña nueva
                     const link = document.createElement('a');
                     link.href = blobUrl;
                     link.target = '_blank'; 
-                    link.download = event.title ? event.title.replace(/ /g, '_') + '.pdf' : 'documento.pdf';
                     
                     document.body.appendChild(link);
                     link.click();
                     document.body.removeChild(link);
                     
-                    setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
+                    // Tiempo de seguridad extra para evitar cierres prematuros en dispositivos lentos
+                    setTimeout(() => URL.revokeObjectURL(blobUrl), 10000);
                 } catch (e) {
-                    // Si falla el Blob, intentamos abrir directo en PC
                     window.open(dataUrl, '_blank');
                 }
             } else {
