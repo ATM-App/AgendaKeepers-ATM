@@ -10,10 +10,10 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="AgendaKeepers"> 
-    <link rel="apple-touch-icon" href="ESCUDO ATM.png">
+    <link rel="apple-touch-icon" href="AgendaKeepers.png">
 
     <link rel="stylesheet" href="style.css">
-    <link rel="icon" type="image/png" href="ESCUDO ATM.png">
+    <link rel="icon" type="image/png" href="AgendaKeepers.png">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
@@ -22,7 +22,7 @@
     <div class="ios-header-container">
         <div class="header-top-row">
             <div class="brand-box">
-                <img src="ESCUDO ATM.png" alt="Escudo" class="escudo-header">
+                <img src="AgendaKeepers.png" alt="Escudo" class="escudo-header">
                 <div class="brand-text">
                     <h1 class="app-title">AgendaKeepers</h1>
                     <div class="date-info">
@@ -226,6 +226,7 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
         import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 
+        // FIREBASE CONFIG
         const firebaseConfig = {
             apiKey: "AIzaSyDh_g2Z8p1OnqzS4n_EciOU2aVuHdhQYfc",
             authDomain: "agendakeepers.firebaseapp.com",
@@ -258,6 +259,7 @@
         document.getElementById('btnWeek').classList.toggle('active', viewMode === 'week');
         document.getElementById('btnMonth').classList.toggle('active', viewMode === 'month');
 
+        // SINCRONIZACIÓN FIREBASE REALTIME
         const eventsRef = ref(db, 'events/');
         onValue(eventsRef, (snapshot) => {
             eventsDB = snapshot.val() || {};
