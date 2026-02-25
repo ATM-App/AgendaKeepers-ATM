@@ -248,6 +248,7 @@
         let tempColor = 'btn-of';
         let tempWeather = 'sun';
         let meetingMode = 'presencial';
+        let renderTimeout = null; // VARIABLE ANTIRREBOTE AÑADIDA
 
         const storedTheme = localStorage.getItem('agenda_theme');
         if (storedTheme === 'light') {
@@ -413,11 +414,15 @@
             const currentMins = now.getHours() * 60 + now.getMinutes();
             let timelineDrawn = false;
 
-            container.innerHTML = '';
             container.classList.add('loading');
             
-            setTimeout(() => {
+            // SISTEMA ANTIRREBOTE: Evita que se dibuje doble si Firebase avisa varias veces muy rápido
+            if (renderTimeout) clearTimeout(renderTimeout);
+            
+            renderTimeout = setTimeout(() => {
+                container.innerHTML = ''; // BORRADO JUSTO ANTES DE DIBUJAR PARA EVITAR DUPLICADOS
                 container.classList.remove('loading');
+                
                 if (events.length === 0) {
                     container.innerHTML = `<div class="empty-state"><span class="empty-icon">📅</span><h3>Sin Actividad</h3><p>No hay eventos programados.</p></div>`;
                 } else {
@@ -425,7 +430,6 @@
                         ev.isCompleted = false;
                         ev.isCurrent = false;
 
-                        // Si está cancelado, ignoramos el timeline y cuenta como completado/opaco
                         if (ev.isCanceled) {
                             ev.isCompleted = true;
                         } else if (isToday) {
@@ -472,7 +476,6 @@
             let dynamicClass = '';
             let cancelBadge = '';
 
-            // Lógica visual si está Cancelado
             if (event.isCanceled) {
                 dynamicClass = 'card-completed'; 
                 cancelBadge = `<span class="badge" style="background:#e74c3c; margin-left: 5px;">🚫 CANCELADO</span>`;
@@ -527,14 +530,12 @@
 
             let checkIcon = event.isCompleted && !event.isCanceled ? '<i class="fas fa-check-circle" style="color:#00ff88; float:right;"></i>' : '';
 
-            // Botonera
             let btns = '';
             btns += `<button class="btn-ios-action whatsapp" onclick="window.shareEvent('${event.id}')"><i class="fab fa-whatsapp"></i></button>`;
             if (event.fileData) btns += `<button class="btn-ios-action primary" onclick="window.openFile('${event.id}')"><span>📄 Ver PDF</span></button>`;
             else btns += `<button class="btn-ios-action primary disabled"><span>📄 No PDF</span></button>`;
             btns += `<button class="btn-ios-action secondary" onclick="window.editEvent('${event.id}')"><span>✏️ Editar</span></button>`;
             
-            // Botón mágico para Cancelar/Restaurar
             if (event.isCanceled) {
                 btns += `<button class="btn-ios-action secondary" onclick="window.toggleCancel('${event.id}')" style="color: #2ecc71; border-color: rgba(46, 204, 113, 0.3);"><span>✅ Restaurar</span></button>`;
             } else {
@@ -553,14 +554,13 @@
             </div>`;
         }
 
-        // NUEVA FUNCIÓN CANCELAR EVENTO
+        // LÓGICA CANCELAR SIN DOBLE RENDERIZADO MANUAL
         window.toggleCancel = function(id) {
             const key = getKeyFromDate(currentDate);
             const idx = eventsDB[key].findIndex(e => String(e.id) === String(id));
             if (idx !== -1) {
                 eventsDB[key][idx].isCanceled = !eventsDB[key][idx].isCanceled;
-                saveToCloud();
-                renderEventsList();
+                saveToCloud(); // Al guardar, onValue se encarga de llamar a renderEventsList una sola vez.
             }
         }
 
@@ -575,7 +575,6 @@
             if (ev.type === 'meeting') header = "🤝 REUNIÓN ATM";
             if (ev.type === 'gym') header = "💪 GYM ATM";
             
-            // Etiqueta en WhatsApp si está cancelado
             if (ev.isCanceled) header = "🚫 [CANCELADO] " + header;
 
             const d = new Date(key);
@@ -770,7 +769,7 @@
                             team: document.getElementById('inputTeam').value || '',
                             timeStart: '', timeEnd: '', colorClass: 'btn-rein', weather: tempWeather, 
                             fileData: tempFileBase64 || null,
-                            isCanceled: false // ESTADO CANCELADO POR DEFECTO
+                            isCanceled: false
                         });
                         loopDate.setDate(loopDate.getDate() + 1);
                     }
@@ -807,7 +806,6 @@
                             eventData.type = 'tournament'; eventData.colorClass = 'btn-rein'; 
                             eventData.timeStart = ''; eventData.timeEnd = '';
                         }
-                        // MANTENEMOS EL ESTADO DE CANCELADO AL EDITAR
                         eventsDB[key][idx] = { ...eventData, id: eventsDB[key][idx].id, isCanceled: eventsDB[key][idx].isCanceled || false }; 
                     } else {
                         alert("Error: Actividad no encontrada para editar."); return;
