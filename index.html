@@ -22,7 +22,7 @@
     <div class="ios-header-container">
         <div class="header-top-row">
             <div class="brand-box">
-                <img src="AgendaKeepers.png" alt="Escudo" class="escudo-header">
+                <img src="ESCUDO ATM.png" alt="Escudo" class="escudo-header">
                 <div class="brand-text">
                     <h1 class="app-title">AgendaKeepers</h1>
                     <div class="date-info">
@@ -226,7 +226,6 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
         import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 
-        // FIREBASE CONFIG
         const firebaseConfig = {
             apiKey: "AIzaSyDh_g2Z8p1OnqzS4n_EciOU2aVuHdhQYfc",
             authDomain: "agendakeepers.firebaseapp.com",
@@ -259,7 +258,6 @@
         document.getElementById('btnWeek').classList.toggle('active', viewMode === 'week');
         document.getElementById('btnMonth').classList.toggle('active', viewMode === 'month');
 
-        // SINCRONIZACIÓN FIREBASE REALTIME
         const eventsRef = ref(db, 'events/');
         onValue(eventsRef, (snapshot) => {
             eventsDB = snapshot.val() || {};
@@ -536,7 +534,6 @@
             </div>`;
         }
 
-        // --- WHATSAPP CORREGIDO A PRUEBA DE EMOJIS ROTOS ---
         window.shareEvent = function(id) {
             const key = getKeyFromDate(currentDate);
             const ev = eventsDB[key].find(e => String(e.id) === String(id));
@@ -551,7 +548,6 @@
             const d = new Date(key);
             const dateStr = d.toLocaleDateString('es-ES'); 
 
-            // Se usa un array para unir las líneas sin problemas de saltos de línea ocultos
             const lines = [
                 `*${header}*`,
                 ``,
@@ -570,9 +566,6 @@
 
             const text = lines.join('\n');
             const encodedText = encodeURIComponent(text);
-
-            // DETECCIÓN DE DISPOSITIVO: Si es móvil, usa el protocolo nativo (whatsapp://)
-            // Si es PC, usa la API web. Esto soluciona los emojis rotos en Safari/iOS/Android.
             const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
             
             if (isMobile) {
