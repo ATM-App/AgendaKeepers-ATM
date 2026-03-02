@@ -226,7 +226,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
         import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
-        // NUEVO: Importamos la Autenticación de Firebase
+        // Importamos la Autenticación de Firebase
         import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 
         const firebaseConfig = {
@@ -240,7 +240,7 @@
         };
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
-        const auth = getAuth(app); // INICIAMOS LA AUTENTICACIÓN
+        const auth = getAuth(app); 
 
         let currentDate = new Date();
         let viewMode = 'week';
@@ -263,8 +263,9 @@
         document.getElementById('btnWeek').classList.toggle('active', viewMode === 'week');
         document.getElementById('btnMonth').classList.toggle('active', viewMode === 'month');
 
-        // SEGURIDAD: Solo leemos la base de datos después de autenticarnos anónimamente
+        // SEGURIDAD: Intentamos login anónimo antes de cargar los datos
         signInAnonymously(auth).then(() => {
+            console.log("Autenticación Anónima Exitosa");
             const eventsRef = ref(db, 'events/');
             onValue(eventsRef, (snapshot) => {
                 eventsDB = snapshot.val() || {};
@@ -272,8 +273,13 @@
                 renderEventsList();
             });
         }).catch((error) => {
-            console.error("Error de autenticación segura:", error);
-            alert("Error de conexión segura. Revisa tu internet.");
+            console.error("Error de Autenticación:", error);
+            // MEJORA: Avisamos del error real para no confundir
+            if(error.code === 'auth/operation-not-allowed') {
+                alert("Firebase bloqueado: Tienes que entrar a la consola de Firebase -> Authentication -> Sign-in method y activar 'Anónimo'.");
+            } else {
+                alert("Error al conectar con la base de datos: " + error.message);
+            }
         });
 
         function saveToCloud() {
@@ -899,7 +905,7 @@
             document.querySelector('.weather-option[data-w="sun"]').classList.add('selected');
         }
 
-        // INICIO (Se ejecuta tras confirmar autenticación anónima)
+        // INICIO
         initLiveWeather();
         updateHeader();
         renderDates();
