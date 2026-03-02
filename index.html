@@ -87,7 +87,7 @@
                     <div class="settings-arrow"><i class="fas fa-chevron-right"></i></div>
                 </div>
                 <div class="settings-group-label">SINCRONIZACIÓN</div>
-                <p style="font-size:0.8rem; color:var(--text-sec);">Tus datos se están guardando automáticamente en la nube (Firebase). Podrás verlos en cualquier dispositivo en tiempo real.</p>
+                <p style="font-size:0.8rem; color:var(--text-sec);">Tus datos se guardan de forma segura en Firebase mediante conexión autenticada anónima.</p>
                 <div style="height: 50px;"></div>
             </div>
         </div>
@@ -226,6 +226,8 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
         import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
+        // NUEVO: Importamos la Autenticación de Firebase
+        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDh_g2Z8p1OnqzS4n_EciOU2aVuHdhQYfc",
@@ -238,6 +240,7 @@
         };
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
+        const auth = getAuth(app); // INICIAMOS LA AUTENTICACIÓN
 
         let currentDate = new Date();
         let viewMode = 'week';
@@ -260,11 +263,17 @@
         document.getElementById('btnWeek').classList.toggle('active', viewMode === 'week');
         document.getElementById('btnMonth').classList.toggle('active', viewMode === 'month');
 
-        const eventsRef = ref(db, 'events/');
-        onValue(eventsRef, (snapshot) => {
-            eventsDB = snapshot.val() || {};
-            renderDates();
-            renderEventsList();
+        // SEGURIDAD: Solo leemos la base de datos después de autenticarnos anónimamente
+        signInAnonymously(auth).then(() => {
+            const eventsRef = ref(db, 'events/');
+            onValue(eventsRef, (snapshot) => {
+                eventsDB = snapshot.val() || {};
+                renderDates();
+                renderEventsList();
+            });
+        }).catch((error) => {
+            console.error("Error de autenticación segura:", error);
+            alert("Error de conexión segura. Revisa tu internet.");
         });
 
         function saveToCloud() {
@@ -698,7 +707,6 @@
             }
         }
 
-        // --- APERTURA DE ARCHIVOS (VISOR NATIVO SIN DESCARGA OBLIGADA) ---
         window.openFile = function(eventId) {
             const key = getKeyFromDate(currentDate);
             const event = eventsDB[key].find(e => String(e.id) === String(eventId));
@@ -748,7 +756,6 @@
                     const blob = new Blob([byteArray], {type: contentType});
                     const blobUrl = URL.createObjectURL(blob);
 
-                    // Al quitar el "download", forzamos al navegador a intentar abrirlo en una pestaña nueva
                     const link = document.createElement('a');
                     link.href = blobUrl;
                     link.target = '_blank'; 
@@ -757,7 +764,6 @@
                     link.click();
                     document.body.removeChild(link);
                     
-                    // Tiempo de seguridad extra para evitar cierres prematuros en dispositivos lentos
                     setTimeout(() => URL.revokeObjectURL(blobUrl), 10000);
                 } catch (e) {
                     window.open(dataUrl, '_blank');
@@ -893,11 +899,10 @@
             document.querySelector('.weather-option[data-w="sun"]').classList.add('selected');
         }
 
-        // INICIO
+        // INICIO (Se ejecuta tras confirmar autenticación anónima)
         initLiveWeather();
         updateHeader();
         renderDates();
-        renderEventsList();
     </script>
 </body>
 </html>
