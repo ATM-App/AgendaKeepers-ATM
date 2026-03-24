@@ -644,7 +644,13 @@
                 lines.push(`📝 *Motivo:* ${ev.title}`);
                 lines.push(`🏟️ *Sede:* ${ev.subtitle || 'Sala / Despacho'}`);
             } 
-            // 3. Lógica para Entreno, Gym, etc.
+            // 3. Lógica para Torneo Completo (El que se crea desde el botón 🏆 Torneo)
+            else if (ev.type === 'tournament') {
+                lines.push(`👥 *Equipo:* ${ev.team || 'Todos'}`);
+                lines.push(`📝 *Motivo:* ${ev.title}`);
+                lines.push(`🏟️ *Sede:* ${ev.subtitle || 'Ciudad Deportiva'}`);
+            }
+            // 4. Lógica para Entreno, Gym, etc.
             else {
                 lines.push(`🧤 *Portero:* Porteros ATM`);
                 lines.push(`👥 *Equipo:* ${ev.team || 'Todos'}`);
