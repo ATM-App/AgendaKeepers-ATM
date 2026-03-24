@@ -210,7 +210,7 @@
                 </div>
 
                 <div id="colorSection">
-                    <label class="input-label" id="labelColor">COLOR / ENFOQUE</label>
+                    <label class="input-label" id="labelColor">COLOR DE TARJETA / EQUIPO</label>
                     <div class="color-picker-row">
                         <div class="color-dot selected" style="background: var(--col-of);" data-class="btn-of" onclick="window.selectColor(this)"></div>
                         <div class="color-dot" style="background: var(--col-def);" data-class="btn-def" onclick="window.selectColor(this)"></div>
@@ -506,23 +506,38 @@
             let timeLeft = `<span class="time-start">${event.timeStart}</span><span class="time-end">${event.timeEnd}</span>`;
             if (isTournament) timeLeft = `<span class="time-start" style="font-size:0.6rem;">DÍA</span><span class="time-end" style="color:#f39c12;">TORNEO</span>`;
 
-            // --- LÓGICA DE COLOR UNIVERSAL (Para Partidos, Torneos y Entrenos) ---
+            // --- LÓGICA DE COLOR DE FONDO DEGRADADO ---
             let c = 'var(--atm-red)';
             let badgeTextCol = 'white';
-            if(event.colorClass && event.colorClass.includes('of')) { c = 'var(--col-of)'; }
-            if(event.colorClass && event.colorClass.includes('def')) { c = 'var(--col-def)'; }
-            if(event.colorClass && event.colorClass.includes('tac')) { c = 'var(--col-tac)'; }
-            if(event.colorClass && event.colorClass.includes('rein')) { c = 'var(--col-rein)'; badgeTextCol = 'black'; }
+            let bgStart = '#1C2C5B'; // Color azul oscuro por defecto
+
+            if(event.colorClass && event.colorClass.includes('of')) { 
+                c = 'var(--col-of)'; 
+                bgStart = '#0E6655'; // Verde oscuro elegante
+            }
+            else if(event.colorClass && event.colorClass.includes('def')) { 
+                c = 'var(--col-def)'; 
+                bgStart = '#641E16'; // Rojo oscuro elegante
+            }
+            else if(event.colorClass && event.colorClass.includes('tac')) { 
+                c = 'var(--col-tac)'; 
+                bgStart = '#4A235A'; // Púrpura oscuro elegante
+            }
+            else if(event.colorClass && event.colorClass.includes('rein')) { 
+                c = 'var(--col-rein)'; 
+                badgeTextCol = 'black'; 
+                bgStart = '#7E5109'; // Dorado/Marrón oscuro elegante
+            }
 
             if (isMatch) {
-                cardStyle = `border: 1px solid ${c}; background: linear-gradient(135deg, #1C2C5B, #000);`;
+                cardStyle = `border: 1px solid ${c}; background: linear-gradient(135deg, ${bgStart}, #000000);`;
                 badgeHTML = `<span class="badge" style="background:${c}; color:${badgeTextCol}; font-size:0.8rem;">${event.competition || 'PARTIDO'}</span>`;
                 titleStyle = 'color: #ffffff !important;';
                 subStyle = 'color: #cccccc !important;';
                 if(event.rival) displayTitle = `<span style="font-weight:400; font-size:0.9rem; color:#aaa;">VS</span> <span style="color:white;">${event.rival.toUpperCase()}</span>`;
             } 
             else if (isTournament) {
-                cardStyle = `border: 1px solid ${c}; border-left: 4px solid ${c}; background: linear-gradient(135deg, #4A235A, #000000);`;
+                cardStyle = `border: 1px solid ${c}; border-left: 4px solid ${c}; background: linear-gradient(135deg, ${bgStart}, #000000);`;
                 badgeHTML = `<span class="badge" style="background:${c}; color:${badgeTextCol};">🏆 TORNEO</span>`;
                 titleStyle = 'color: #ffffff !important;';
                 subStyle = `color: ${c} !important; font-weight:600;`;
@@ -862,7 +877,7 @@
                             subtitle: document.getElementById('inputSub').value || 'Ubicación Torneo',
                             team: document.getElementById('inputTeam').value || '',
                             timeStart: '', timeEnd: '', 
-                            colorClass: tempColor, // GUARDA EL COLOR ELEGIDO
+                            colorClass: tempColor, 
                             weather: tempWeather, 
                             fileData: tempFileBase64 || null,
                             isCanceled: false
@@ -889,7 +904,7 @@
                     team: document.getElementById('inputTeam').value || '',
                     timeStart: document.getElementById('inputStart').value || '',
                     timeEnd: document.getElementById('inputEnd').value || '',
-                    colorClass: tempColor, // GUARDA EL COLOR ELEGIDO
+                    colorClass: tempColor, 
                     fileData: tempFileBase64 || null, 
                     competition: document.getElementById('inputComp').value,
                     rival: document.getElementById('inputRival').value, weather: tempWeather
@@ -928,7 +943,6 @@
             document.getElementById('inputFile').value = "";
             tempFileBase64 = null; editingId = null; tempWeather = 'sun';
             
-            // Volver al Verde por defecto
             tempColor = 'btn-of';
             document.querySelectorAll('.color-dot').forEach(d => d.classList.remove('selected'));
             document.querySelector('.color-dot[data-class="btn-of"]').classList.add('selected');
