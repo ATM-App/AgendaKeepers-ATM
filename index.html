@@ -118,7 +118,7 @@
                     <div class="row">
                         <div style="width: 40%;">
                             <label class="input-label">COMPETICIÓN</label>
-                            <select id="inputComp" class="ios-input" style="padding: 14px;">
+                            <select id="inputComp" class="ios-input" style="padding: 14px;" onchange="window.toggleJornada(this.value)">
                                 <option value="LIGA">LIGA</option>
                                 <option value="TORNEO">TORNEO</option>
                                 <option value="AMISTOSO">AMISTOSO</option>
@@ -128,6 +128,11 @@
                         <div style="width: 60%;">
                             <label class="input-label">RIVAL</label>
                             <input type="text" id="inputRival" placeholder="Ej. Real Madrid" class="ios-input">
+                        </div>
+                    </div>
+                    <div class="row" id="jornadaRow" style="margin-top: -10px;">
+                        <div class="full-width">
+                            <input type="text" id="inputJornada" placeholder="Jornada (Ej. Jornada 12)" class="ios-input" style="margin-bottom: 0;">
                         </div>
                     </div>
                 </div>
@@ -559,25 +564,18 @@
 
             let checkIcon = event.isCompleted && !event.isCanceled ? '<i class="fas fa-check-circle" style="color:#00ff88; float:right;"></i>' : '';
 
-            // --- BOTONERA ---
             let btns = '';
-            
-            // Botón de WhatsApp
             btns += `<button class="btn-ios-action whatsapp" onclick="window.shareEvent('${event.id}')"><i class="fab fa-whatsapp"></i></button>`;
             
-            // NUEVO: Botón de MAPA (Aparece solo si hay enlace guardado)
             if (event.locationLink) {
                 btns += `<button class="btn-ios-action secondary" onclick="window.open('${event.locationLink}', '_blank')"><span>📍 Mapa</span></button>`;
             }
 
-            // Botón PDF
             if (event.fileData) btns += `<button class="btn-ios-action primary" onclick="window.openFile('${event.id}')"><span>📄 Ver PDF</span></button>`;
             else btns += `<button class="btn-ios-action primary disabled"><span>📄 No PDF</span></button>`;
             
-            // Botón Editar
             btns += `<button class="btn-ios-action secondary" onclick="window.editEvent('${event.id}')"><span>✏️ Editar</span></button>`;
             
-            // Botón Cancelar/Restaurar
             if (event.isCanceled) {
                 btns += `<button class="btn-ios-action secondary" onclick="window.toggleCancel('${event.id}')" style="color: #2ecc71; border-color: rgba(46, 204, 113, 0.3);"><span>✅ Restaurar</span></button>`;
             } else {
@@ -605,6 +603,7 @@
             }
         }
 
+        // --- GENERADOR INTELIGENTE DE WHATSAPP ---
         window.shareEvent = function(id) {
             const key = getKeyFromDate(currentDate);
             const ev = eventsDB[key].find(e => String(e.id) === String(id));
@@ -623,14 +622,37 @@
 
             const lines = [
                 `*${header}*`,
-                ``,
-                `🧤 *Portero:* Porteros ATM`,
-                `👥 *Equipo:* ${ev.team || 'Todos'}`,
-                `📝 *Motivo:* ${ev.title}`,
-                `🏟️ *Sede:* ${ev.subtitle || 'Ciudad Deportiva'}`
+                ``
             ];
 
-            // NUEVO: Añadir Mapa al WhatsApp si existe
+            // 1. Lógica para Partido (Normal o de Torneo)
+            if (ev.type === 'match') {
+                lines.push(`👥 *Equipo:* ${ev.team || 'Todos'}`);
+                
+                if (ev.competition === 'TORNEO') {
+                    lines.push(`📝 *Motivo:* TORNEO`);
+                } else {
+                    if (ev.jornada) lines.push(`📝 *Jornada:* ${ev.jornada}`);
+                }
+                
+                lines.push(`🆚 *Rival:* ${ev.rival || 'Por definir'}`);
+                lines.push(`🏟️ *Sede:* ${ev.subtitle || 'Ciudad Deportiva'}`);
+            } 
+            // 2. Lógica para Reunión
+            else if (ev.type === 'meeting') {
+                lines.push(`👥 *Equipo:* ${ev.team || 'Todos'}`);
+                lines.push(`📝 *Motivo:* ${ev.title}`);
+                lines.push(`🏟️ *Sede:* ${ev.subtitle || 'Sala / Despacho'}`);
+            } 
+            // 3. Lógica para Entreno, Gym, etc.
+            else {
+                lines.push(`🧤 *Portero:* Porteros ATM`);
+                lines.push(`👥 *Equipo:* ${ev.team || 'Todos'}`);
+                lines.push(`📝 *Motivo:* ${ev.title}`);
+                lines.push(`🏟️ *Sede:* ${ev.subtitle || 'Ciudad Deportiva'}`);
+            }
+
+            // --- Bloque Común a todos ---
             if(ev.locationLink) {
                 lines.push(`📍 *Mapa:* ${ev.locationLink}`);
             }
@@ -683,6 +705,16 @@
         };
         window.closeModal = () => document.getElementById('newSessionModal').classList.remove('open');
 
+        // Mostrar/Ocultar Jornada dinámicamente
+        window.toggleJornada = function(val) {
+            const jRow = document.getElementById('jornadaRow');
+            if (val === 'TORNEO' || val === 'AMISTOSO') {
+                jRow.style.display = 'none';
+            } else {
+                jRow.style.display = 'flex';
+            }
+        }
+
         window.selectType = function(el) {
             document.querySelectorAll('.segment-option').forEach(o => o.classList.remove('active'));
             el.classList.add('active');
@@ -694,7 +726,7 @@
             const meetConfig = document.getElementById('meetingConfig');
             const colorSec = document.getElementById('colorSection');
             const locationRow = document.getElementById('locationRow');
-            const mapLinkRow = document.getElementById('mapLinkRow'); // NUEVO MAPA
+            const mapLinkRow = document.getElementById('mapLinkRow'); 
             const timeRow = document.getElementById('timeRow');
             const weatherSec = document.getElementById('weatherSection');
             const inputSub = document.getElementById('inputSub');
@@ -704,7 +736,7 @@
             
             colorSec.style.display = 'block'; 
             locationRow.style.display = 'flex';
-            mapLinkRow.style.display = 'flex'; // NUEVO MAPA
+            mapLinkRow.style.display = 'flex'; 
             timeRow.style.display = 'flex'; weatherSec.style.display = 'block';
             document.getElementById('labelTitle').innerText = "TÍTULO SESIÓN";
             inputSub.placeholder = "Ubicación (Campo/Estadio)";
@@ -712,6 +744,7 @@
             if (tempType === 'match') { 
                 matchConfig.style.display = 'block'; titleRow.style.display = 'none'; 
                 document.getElementById('labelColor').innerText = "COLOR DE TARJETA / EQUIPO";
+                window.toggleJornada(document.getElementById('inputComp').value); // Controlar Jornada
             }
             else if (tempType === 'meeting') { 
                 meetConfig.style.display = 'block'; 
@@ -735,7 +768,7 @@
             document.getElementById('btnOnline').classList.toggle('active', mode === 'online');
             const linkInput = document.getElementById('inputLink');
             const locationRow = document.getElementById('locationRow');
-            const mapLinkRow = document.getElementById('mapLinkRow'); // NUEVO MAPA
+            const mapLinkRow = document.getElementById('mapLinkRow'); 
             const inputSub = document.getElementById('inputSub');
 
             if (mode === 'online') { 
@@ -852,7 +885,6 @@
             document.getElementById('inputStart').value = event.timeStart || '';
             document.getElementById('inputEnd').value = event.timeEnd || '';
             document.getElementById('inputTitle').value = event.title || '';
-            // NUEVO: Cargar link del mapa al editar
             document.getElementById('inputLocationLink').value = event.locationLink || '';
 
             document.querySelectorAll('.color-dot').forEach(d => d.classList.remove('selected'));
@@ -871,7 +903,13 @@
             }
 
             if(event.type === 'tournament') { document.getElementById('tourConfig').style.display = 'none'; document.getElementById('titleRow').style.display = 'block'; document.getElementById('labelTitle').innerText = "NOMBRE DEL TORNEO"; document.getElementById('locationRow').style.display = 'flex'; document.getElementById('mapLinkRow').style.display = 'flex';}
-            if (event.type === 'match') { document.getElementById('inputComp').value = event.competition || 'LIGA'; document.getElementById('inputRival').value = event.rival || ''; }
+            
+            if (event.type === 'match') { 
+                document.getElementById('inputComp').value = event.competition || 'LIGA'; 
+                document.getElementById('inputRival').value = event.rival || ''; 
+                document.getElementById('inputJornada').value = event.jornada || ''; 
+                window.toggleJornada(event.competition || 'LIGA');
+            }
             if (event.type === 'meeting') { if (event.link) { window.toggleMeetingMode('online'); document.getElementById('inputLink').value = event.link; } else window.toggleMeetingMode('presencial'); }
 
             tempFileBase64 = event.fileData || null; 
@@ -891,7 +929,8 @@
                 if (tempType !== 'match' && !document.getElementById('inputTitle').value) { alert("Ponle un título"); return; }
                 if (tempType === 'match' && !document.getElementById('inputRival').value) { alert("Indica el rival"); return; }
 
-                const locLink = document.getElementById('inputLocationLink').value || null; // NUEVO: Extraer Mapa
+                const locLink = document.getElementById('inputLocationLink').value || null; 
+                const jornadaVal = document.getElementById('inputJornada').value || null;
 
                 if (tempType === 'tournament' && !editingId) {
                     const startStr = document.getElementById('tourStart').value;
@@ -910,7 +949,7 @@
                             id: sharedId + "_" + key, type: 'tournament',
                             title: document.getElementById('inputTitle').value,
                             subtitle: document.getElementById('inputSub').value || 'Ubicación Torneo',
-                            locationLink: locLink, // GUARDAR MAPA
+                            locationLink: locLink, 
                             team: document.getElementById('inputTeam').value || '',
                             timeStart: '', timeEnd: '', 
                             colorClass: tempColor, 
@@ -937,7 +976,8 @@
                 const eventData = {
                     type: tempType, title: document.getElementById('inputTitle').value,
                     subtitle: finalSubtitle, link: finalLink,
-                    locationLink: locLink, // GUARDAR MAPA
+                    locationLink: locLink, 
+                    jornada: jornadaVal,
                     team: document.getElementById('inputTeam').value || '',
                     timeStart: document.getElementById('inputStart').value || '',
                     timeEnd: document.getElementById('inputEnd').value || '',
@@ -974,8 +1014,9 @@
         function resetForm() {
             document.getElementById('inputTitle').value = ""; document.getElementById('inputSub').value = "";
             document.getElementById('inputTeam').value = ""; document.getElementById('inputRival').value = "";
+            document.getElementById('inputJornada').value = ""; 
             document.getElementById('inputLink').value = "";
-            document.getElementById('inputLocationLink').value = ""; // LIMPIAR MAPA
+            document.getElementById('inputLocationLink').value = ""; 
             document.getElementById('fileNameDisplay').innerText = "Adjuntar Sesión";
             document.getElementById('fileNameDisplay').style.color = "inherit";
             document.getElementById('inputFile').value = "";
