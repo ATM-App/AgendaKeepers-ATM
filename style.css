@@ -8,7 +8,17 @@
     --atm-blue: #1C2C5B; 
     --atm-red: #CB3524; 
     --radius-m: 16px; 
-    --col-def: #c0392b; --col-of: #1abc9c; --col-tac: #8e44ad; --col-rein: #f39c12; 
+    
+    /* PALETA DE COLORES AMPLIADA */
+    --col-def: #c0392b; 
+    --col-of: #1abc9c; 
+    --col-tac: #8e44ad; 
+    --col-rein: #f1c40f; 
+    --col-blue: #3498db;
+    --col-orange: #e67e22;
+    --col-pink: #e84393;
+    --col-gray: #95a5a6;
+    
     --input-scheme: dark;
     --input-border: rgba(255,255,255,0.1); 
 }
@@ -43,7 +53,7 @@ body.light-mode { background: linear-gradient(-45deg, #f2f4f8, #e6e9ef, #ffffff,
     100% { background-position: 0% 50%; }
 }
 
-/* --- HEADER CORREGIDO PARA MÓVILES --- */
+/* --- HEADER PARA MÓVILES --- */
 .ios-header-container {
     position: sticky; top: 0; z-index: 100;
     background: rgba(17, 26, 54, 0.8);
@@ -53,23 +63,20 @@ body.light-mode { background: linear-gradient(-45deg, #f2f4f8, #e6e9ef, #ffffff,
 }
 body.light-mode .ios-header-container { background: rgba(255,255,255,0.85); border-bottom: 1px solid rgba(0,0,0,0.05); }
 
-/* Fila superior fluida y sin desbordamiento */
 .header-top-row { 
     display: flex; justify-content: space-between; align-items: center; 
     padding: 0 15px; margin-bottom: 15px; gap: 8px; 
 }
 .brand-box { 
     display: flex; align-items: center; gap: 10px; 
-    flex: 1; min-width: 0; /* Permite comprimir si falta espacio */
+    flex: 1; min-width: 0; 
 }
 .escudo-header { 
     width: 42px; height: auto; object-fit: contain; flex-shrink: 0; 
 }
 .brand-text { 
-    display: flex; flex-direction: column; min-width: 0; /* Permite comprimir el texto */
+    display: flex; flex-direction: column; min-width: 0; 
 }
-
-/* Título con clamp() para escalar en tablet/móvil y ellipsis para no romper el margen */
 .app-title { 
     font-size: clamp(1.2rem, 5vw, 1.6rem); 
     font-weight: 800; line-height: 1; letter-spacing: -1px; margin-bottom: 4px;
@@ -87,7 +94,6 @@ body.light-mode .ios-header-container { background: rgba(255,255,255,0.85); bord
     font-size: 0.7rem; font-weight: 600; color: var(--text-sec); flex-shrink: 0;
 }
 
-/* Controles de la derecha bloqueados para que nunca se encojan o salgan */
 .right-controls-group { 
     display: flex; align-items: center; gap: 8px; flex-shrink: 0; 
 }
@@ -109,7 +115,6 @@ body.light-mode .ios-header-container { background: rgba(255,255,255,0.85); bord
     flex-shrink: 0;
 }
 
-/* Fila de navegación (mes/semana) */
 .nav-row { display: flex; justify-content: space-between; align-items: center; padding: 0 15px 15px 15px; }
 .nav-arrows { display: flex; gap: 10px; }
 .nav-btn {
@@ -204,7 +209,7 @@ body.light-mode .modern-card { background: rgba(255,255,255,0.7); border: 1px so
 
 .ios-sheet {
     width: 100%; 
-    height: 90vh; /* Fallback universal */
+    height: 90vh; 
     max-height: 90dvh; 
     background: var(--bg-card); border-radius: 24px 24px 0 0; 
     display: flex; flex-direction: column;
@@ -334,10 +339,3 @@ input[type="time"], input[type="date"] { color-scheme: var(--input-scheme); }
 .settings-arrow { margin-left: auto; color: var(--text-sec); }
 
 .settings-group-label { font-size: 0.7rem; font-weight: 800; color: var(--text-sec); margin-bottom: 10px; letter-spacing: 1px; }
-.settings-row { display: flex; gap: 10px; flex-wrap: wrap;}
-.btn-settings-action {
-    flex: 1; min-width: 120px; padding: 12px; border-radius: 10px; border: none;
-    background: var(--text-main); color: var(--bg-body); font-weight: 700; font-size: 0.8rem;
-    cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;
-}
-.btn-settings-action.secondary { background: var(--input-bg); color: var(--text-main); border: 1px solid var(--input-border); }

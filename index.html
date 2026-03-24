@@ -216,6 +216,11 @@
                         <div class="color-dot" style="background: var(--col-def);" data-class="btn-def" onclick="window.selectColor(this)"></div>
                         <div class="color-dot" style="background: var(--col-tac);" data-class="btn-tac" onclick="window.selectColor(this)"></div>
                         <div class="color-dot" style="background: var(--col-rein);" data-class="btn-rein" onclick="window.selectColor(this)"></div>
+                        
+                        <div class="color-dot" style="background: var(--col-blue);" data-class="btn-blue" onclick="window.selectColor(this)"></div>
+                        <div class="color-dot" style="background: var(--col-orange);" data-class="btn-orange" onclick="window.selectColor(this)"></div>
+                        <div class="color-dot" style="background: var(--col-pink);" data-class="btn-pink" onclick="window.selectColor(this)"></div>
+                        <div class="color-dot" style="background: var(--col-gray);" data-class="btn-gray" onclick="window.selectColor(this)"></div>
                     </div>
                 </div>
                 <div style="height: 100px;"></div>
@@ -474,6 +479,7 @@
         function createCardHTML(event) {
             const isMatch = event.type === 'match';
             const isTournament = event.type === 'tournament';
+            const isMeeting = event.type === 'meeting';
             
             let displayTitle = event.title;
             let displaySub = event.subtitle || 'Ciudad Deportiva';
@@ -506,48 +512,39 @@
             let timeLeft = `<span class="time-start">${event.timeStart}</span><span class="time-end">${event.timeEnd}</span>`;
             if (isTournament) timeLeft = `<span class="time-start" style="font-size:0.6rem;">DÍA</span><span class="time-end" style="color:#f39c12;">TORNEO</span>`;
 
-            // --- LÓGICA DE COLOR DE FONDO DEGRADADO ---
+            // --- LÓGICA AMPLIADA DE COLORES Y FONDOS ---
             let c = 'var(--atm-red)';
             let badgeTextCol = 'white';
             let bgStart = '#1C2C5B'; // Color azul oscuro por defecto
 
-            if(event.colorClass && event.colorClass.includes('of')) { 
-                c = 'var(--col-of)'; 
-                bgStart = '#0E6655'; // Verde oscuro elegante
-            }
-            else if(event.colorClass && event.colorClass.includes('def')) { 
-                c = 'var(--col-def)'; 
-                bgStart = '#641E16'; // Rojo oscuro elegante
-            }
-            else if(event.colorClass && event.colorClass.includes('tac')) { 
-                c = 'var(--col-tac)'; 
-                bgStart = '#4A235A'; // Púrpura oscuro elegante
-            }
-            else if(event.colorClass && event.colorClass.includes('rein')) { 
-                c = 'var(--col-rein)'; 
-                badgeTextCol = 'black'; 
-                bgStart = '#7E5109'; // Dorado/Marrón oscuro elegante
-            }
+            if(event.colorClass && event.colorClass.includes('of')) { c = 'var(--col-of)'; bgStart = '#0E6655'; }
+            else if(event.colorClass && event.colorClass.includes('def')) { c = 'var(--col-def)'; bgStart = '#641E16'; }
+            else if(event.colorClass && event.colorClass.includes('tac')) { c = 'var(--col-tac)'; bgStart = '#4A235A'; }
+            else if(event.colorClass && event.colorClass.includes('rein')) { c = 'var(--col-rein)'; badgeTextCol = 'black'; bgStart = '#7D6608'; } // Bronce/Oro oscuro
+            else if(event.colorClass && event.colorClass.includes('blue')) { c = 'var(--col-blue)'; bgStart = '#1A5276'; } // Azul oscuro
+            else if(event.colorClass && event.colorClass.includes('orange')) { c = 'var(--col-orange)'; badgeTextCol = 'black'; bgStart = '#7E5109'; } // Naranja oscuro
+            else if(event.colorClass && event.colorClass.includes('pink')) { c = 'var(--col-pink)'; bgStart = '#641E43'; } // Rosa oscuro
+            else if(event.colorClass && event.colorClass.includes('gray')) { c = 'var(--col-gray)'; bgStart = '#424949'; } // Gris oscuro
+
+            // TODAS LAS TARJETAS RECIBEN AHORA EL FONDO DEGRADADO PREMIUM DE SU COLOR
+            cardStyle = `border: 1px solid ${c}; border-left: 4px solid ${c}; background: linear-gradient(135deg, ${bgStart}, #000000);`;
+            
+            // Textos genéricos blancos por defecto
+            titleStyle = 'color: #ffffff !important;';
+            subStyle = 'color: #cccccc !important;';
 
             if (isMatch) {
-                cardStyle = `border: 1px solid ${c}; background: linear-gradient(135deg, ${bgStart}, #000000);`;
                 badgeHTML = `<span class="badge" style="background:${c}; color:${badgeTextCol}; font-size:0.8rem;">${event.competition || 'PARTIDO'}</span>`;
-                titleStyle = 'color: #ffffff !important;';
-                subStyle = 'color: #cccccc !important;';
                 if(event.rival) displayTitle = `<span style="font-weight:400; font-size:0.9rem; color:#aaa;">VS</span> <span style="color:white;">${event.rival.toUpperCase()}</span>`;
             } 
             else if (isTournament) {
-                cardStyle = `border: 1px solid ${c}; border-left: 4px solid ${c}; background: linear-gradient(135deg, ${bgStart}, #000000);`;
                 badgeHTML = `<span class="badge" style="background:${c}; color:${badgeTextCol};">🏆 TORNEO</span>`;
-                titleStyle = 'color: #ffffff !important;';
                 subStyle = `color: ${c} !important; font-weight:600;`;
             }
-            else if (event.type === 'meeting') {
-                cardStyle = 'border-left: 4px solid #3498db; background: var(--bg-card);';
-                badgeHTML = '<span class="badge" style="background:#3498db; color:white;">REUNIÓN</span>';
+            else if (isMeeting) {
+                badgeHTML = `<span class="badge" style="background:${c}; color:${badgeTextCol};">🤝 REUNIÓN</span>`;
             } 
             else {
-                cardStyle = `border-left: 4px solid ${c}; background: var(--bg-card);`;
                 badgeHTML = `<span class="badge" style="background:${c}; color:${badgeTextCol};">ENTRENO</span>`;
             }
 
@@ -682,7 +679,7 @@
             matchConfig.style.display = 'none'; tourConfig.style.display = 'none';
             titleRow.style.display = 'block'; meetConfig.style.display = 'none';
             
-            // LA SECCIÓN DE COLOR AHORA SE MUESTRA SIEMPRE (Excepto Reunión)
+            // LA SECCIÓN DE COLOR AHORA SE MUESTRA SIEMPRE
             colorSec.style.display = 'block'; 
             
             locationRow.style.display = 'flex';
@@ -692,18 +689,21 @@
 
             if (tempType === 'match') { 
                 matchConfig.style.display = 'block'; titleRow.style.display = 'none'; 
-                document.getElementById('labelColor').innerText = "COLOR DE ETIQUETA / EQUIPO";
+                document.getElementById('labelColor').innerText = "COLOR DE TARJETA / EQUIPO";
             }
             else if (tempType === 'meeting') { 
-                meetConfig.style.display = 'block'; colorSec.style.display = 'none'; weatherSec.style.display = 'none'; window.toggleMeetingMode('presencial'); 
+                meetConfig.style.display = 'block'; 
+                weatherSec.style.display = 'none'; 
+                window.toggleMeetingMode('presencial'); 
+                document.getElementById('labelColor').innerText = "COLOR DE LA REUNIÓN";
             }
             else if (tempType === 'tournament') { 
                 tourConfig.style.display = 'block'; timeRow.style.display = 'none'; 
                 document.getElementById('labelTitle').innerText = "NOMBRE DEL TORNEO"; 
-                document.getElementById('labelColor').innerText = "COLOR DE ETIQUETA / EQUIPO";
+                document.getElementById('labelColor').innerText = "COLOR DE TARJETA / EQUIPO";
             } 
             else {
-                document.getElementById('labelColor').innerText = "COLOR / ENFOQUE";
+                document.getElementById('labelColor').innerText = "COLOR DE TARJETA / ENFOQUE";
             }
         }
 
@@ -821,7 +821,6 @@
             document.getElementById('inputEnd').value = event.timeEnd || '';
             document.getElementById('inputTitle').value = event.title || '';
 
-            // Resetea el color antes de seleccionar
             document.querySelectorAll('.color-dot').forEach(d => d.classList.remove('selected'));
             if(event.colorClass) {
                 tempColor = event.colorClass;
