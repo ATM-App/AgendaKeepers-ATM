@@ -170,6 +170,12 @@
                     </div>
                 </div>
 
+                <div id="mapLinkRow" class="row" style="margin-top: -10px; margin-bottom: 10px;">
+                    <div class="full-width">
+                        <input type="url" id="inputLocationLink" placeholder="📍 Enlace de Google Maps (Opcional)" class="ios-input" style="margin-bottom: 0;">
+                    </div>
+                </div>
+
                 <div id="meetingConfig" style="display:none; margin-bottom:15px;">
                     <div class="row">
                         <button class="btn-toggle active" id="btnPresencial" onclick="window.toggleMeetingMode('presencial')">Presencial</button>
@@ -212,15 +218,15 @@
                 <div id="colorSection">
                     <label class="input-label" id="labelColor">COLOR DE TARJETA / EQUIPO</label>
                     <div class="color-picker-row">
-                        <div class="color-dot selected" style="background: var(--col-of);" data-class="btn-of" onclick="window.selectColor(this)"></div>
-                        <div class="color-dot" style="background: var(--col-def);" data-class="btn-def" onclick="window.selectColor(this)"></div>
-                        <div class="color-dot" style="background: var(--col-tac);" data-class="btn-tac" onclick="window.selectColor(this)"></div>
-                        <div class="color-dot" style="background: var(--col-rein);" data-class="btn-rein" onclick="window.selectColor(this)"></div>
+                        <div class="color-dot selected" style="background: #1abc9c;" data-class="btn-of" onclick="window.selectColor(this)"></div>
+                        <div class="color-dot" style="background: #c0392b;" data-class="btn-def" onclick="window.selectColor(this)"></div>
+                        <div class="color-dot" style="background: #8e44ad;" data-class="btn-tac" onclick="window.selectColor(this)"></div>
+                        <div class="color-dot" style="background: #f1c40f;" data-class="btn-rein" onclick="window.selectColor(this)"></div>
                         
-                        <div class="color-dot" style="background: var(--col-blue);" data-class="btn-blue" onclick="window.selectColor(this)"></div>
-                        <div class="color-dot" style="background: var(--col-orange);" data-class="btn-orange" onclick="window.selectColor(this)"></div>
-                        <div class="color-dot" style="background: var(--col-pink);" data-class="btn-pink" onclick="window.selectColor(this)"></div>
-                        <div class="color-dot" style="background: var(--col-gray);" data-class="btn-gray" onclick="window.selectColor(this)"></div>
+                        <div class="color-dot" style="background: #3498db;" data-class="btn-blue" onclick="window.selectColor(this)"></div>
+                        <div class="color-dot" style="background: #e67e22;" data-class="btn-orange" onclick="window.selectColor(this)"></div>
+                        <div class="color-dot" style="background: #e84393;" data-class="btn-pink" onclick="window.selectColor(this)"></div>
+                        <div class="color-dot" style="background: #95a5a6;" data-class="btn-gray" onclick="window.selectColor(this)"></div>
                     </div>
                 </div>
                 <div style="height: 100px;"></div>
@@ -512,24 +518,21 @@
             let timeLeft = `<span class="time-start">${event.timeStart}</span><span class="time-end">${event.timeEnd}</span>`;
             if (isTournament) timeLeft = `<span class="time-start" style="font-size:0.6rem;">DÍA</span><span class="time-end" style="color:#f39c12;">TORNEO</span>`;
 
-            // --- LÓGICA AMPLIADA DE COLORES Y FONDOS ---
-            let c = 'var(--atm-red)';
+            let c = '#CB3524'; 
             let badgeTextCol = 'white';
-            let bgStart = '#1C2C5B'; // Color azul oscuro por defecto
+            let bgStart = '#1C2C5B'; 
 
-            if(event.colorClass && event.colorClass.includes('of')) { c = 'var(--col-of)'; bgStart = '#0E6655'; }
-            else if(event.colorClass && event.colorClass.includes('def')) { c = 'var(--col-def)'; bgStart = '#641E16'; }
-            else if(event.colorClass && event.colorClass.includes('tac')) { c = 'var(--col-tac)'; bgStart = '#4A235A'; }
-            else if(event.colorClass && event.colorClass.includes('rein')) { c = 'var(--col-rein)'; badgeTextCol = 'black'; bgStart = '#7D6608'; } // Bronce/Oro oscuro
-            else if(event.colorClass && event.colorClass.includes('blue')) { c = 'var(--col-blue)'; bgStart = '#1A5276'; } // Azul oscuro
-            else if(event.colorClass && event.colorClass.includes('orange')) { c = 'var(--col-orange)'; badgeTextCol = 'black'; bgStart = '#7E5109'; } // Naranja oscuro
-            else if(event.colorClass && event.colorClass.includes('pink')) { c = 'var(--col-pink)'; bgStart = '#641E43'; } // Rosa oscuro
-            else if(event.colorClass && event.colorClass.includes('gray')) { c = 'var(--col-gray)'; bgStart = '#424949'; } // Gris oscuro
+            if(event.colorClass && event.colorClass.includes('of')) { c = '#1abc9c'; bgStart = '#0E6655'; }
+            else if(event.colorClass && event.colorClass.includes('def')) { c = '#c0392b'; bgStart = '#641E16'; }
+            else if(event.colorClass && event.colorClass.includes('tac')) { c = '#8e44ad'; bgStart = '#4A235A'; }
+            else if(event.colorClass && event.colorClass.includes('rein')) { c = '#f1c40f'; badgeTextCol = 'black'; bgStart = '#7D6608'; } 
+            else if(event.colorClass && event.colorClass.includes('blue')) { c = '#3498db'; bgStart = '#1A5276'; } 
+            else if(event.colorClass && event.colorClass.includes('orange')) { c = '#e67e22'; badgeTextCol = 'black'; bgStart = '#7E5109'; } 
+            else if(event.colorClass && event.colorClass.includes('pink')) { c = '#e84393'; bgStart = '#641E43'; } 
+            else if(event.colorClass && event.colorClass.includes('gray')) { c = '#95a5a6'; badgeTextCol = 'black'; bgStart = '#424949'; }
 
-            // TODAS LAS TARJETAS RECIBEN AHORA EL FONDO DEGRADADO PREMIUM DE SU COLOR
             cardStyle = `border: 1px solid ${c}; border-left: 4px solid ${c}; background: linear-gradient(135deg, ${bgStart}, #000000);`;
             
-            // Textos genéricos blancos por defecto
             titleStyle = 'color: #ffffff !important;';
             subStyle = 'color: #cccccc !important;';
 
@@ -556,12 +559,25 @@
 
             let checkIcon = event.isCompleted && !event.isCanceled ? '<i class="fas fa-check-circle" style="color:#00ff88; float:right;"></i>' : '';
 
+            // --- BOTONERA ---
             let btns = '';
+            
+            // Botón de WhatsApp
             btns += `<button class="btn-ios-action whatsapp" onclick="window.shareEvent('${event.id}')"><i class="fab fa-whatsapp"></i></button>`;
+            
+            // NUEVO: Botón de MAPA (Aparece solo si hay enlace guardado)
+            if (event.locationLink) {
+                btns += `<button class="btn-ios-action secondary" onclick="window.open('${event.locationLink}', '_blank')"><span>📍 Mapa</span></button>`;
+            }
+
+            // Botón PDF
             if (event.fileData) btns += `<button class="btn-ios-action primary" onclick="window.openFile('${event.id}')"><span>📄 Ver PDF</span></button>`;
             else btns += `<button class="btn-ios-action primary disabled"><span>📄 No PDF</span></button>`;
+            
+            // Botón Editar
             btns += `<button class="btn-ios-action secondary" onclick="window.editEvent('${event.id}')"><span>✏️ Editar</span></button>`;
             
+            // Botón Cancelar/Restaurar
             if (event.isCanceled) {
                 btns += `<button class="btn-ios-action secondary" onclick="window.toggleCancel('${event.id}')" style="color: #2ecc71; border-color: rgba(46, 204, 113, 0.3);"><span>✅ Restaurar</span></button>`;
             } else {
@@ -611,10 +627,16 @@
                 `🧤 *Portero:* Porteros ATM`,
                 `👥 *Equipo:* ${ev.team || 'Todos'}`,
                 `📝 *Motivo:* ${ev.title}`,
-                `🏟️ *Sede:* ${ev.subtitle || 'Ciudad Deportiva'}`,
-                `📅 *Fecha:* ${dateStr}`,
-                `⏰ *Hora:* ${ev.timeStart} - ${ev.timeEnd}`
+                `🏟️ *Sede:* ${ev.subtitle || 'Ciudad Deportiva'}`
             ];
+
+            // NUEVO: Añadir Mapa al WhatsApp si existe
+            if(ev.locationLink) {
+                lines.push(`📍 *Mapa:* ${ev.locationLink}`);
+            }
+
+            lines.push(`📅 *Fecha:* ${dateStr}`);
+            lines.push(`⏰ *Hora:* ${ev.timeStart} - ${ev.timeEnd}`);
 
             if(ev.weather) {
                 const wMap = { 'sun': '☀️ Sol', 'cloud': '☁️ Nubes', 'rain': '🌧️ Lluvia', 'snow': '❄️ Nieve', 'wind': '💨 Viento' };
@@ -672,6 +694,7 @@
             const meetConfig = document.getElementById('meetingConfig');
             const colorSec = document.getElementById('colorSection');
             const locationRow = document.getElementById('locationRow');
+            const mapLinkRow = document.getElementById('mapLinkRow'); // NUEVO MAPA
             const timeRow = document.getElementById('timeRow');
             const weatherSec = document.getElementById('weatherSection');
             const inputSub = document.getElementById('inputSub');
@@ -679,10 +702,9 @@
             matchConfig.style.display = 'none'; tourConfig.style.display = 'none';
             titleRow.style.display = 'block'; meetConfig.style.display = 'none';
             
-            // LA SECCIÓN DE COLOR AHORA SE MUESTRA SIEMPRE
             colorSec.style.display = 'block'; 
-            
             locationRow.style.display = 'flex';
+            mapLinkRow.style.display = 'flex'; // NUEVO MAPA
             timeRow.style.display = 'flex'; weatherSec.style.display = 'block';
             document.getElementById('labelTitle').innerText = "TÍTULO SESIÓN";
             inputSub.placeholder = "Ubicación (Campo/Estadio)";
@@ -713,10 +735,20 @@
             document.getElementById('btnOnline').classList.toggle('active', mode === 'online');
             const linkInput = document.getElementById('inputLink');
             const locationRow = document.getElementById('locationRow');
+            const mapLinkRow = document.getElementById('mapLinkRow'); // NUEVO MAPA
             const inputSub = document.getElementById('inputSub');
 
-            if (mode === 'online') { linkInput.style.display = 'block'; locationRow.style.display = 'none'; }
-            else { linkInput.style.display = 'none'; locationRow.style.display = 'flex'; inputSub.placeholder = "Sala / Despacho"; }
+            if (mode === 'online') { 
+                linkInput.style.display = 'block'; 
+                locationRow.style.display = 'none'; 
+                mapLinkRow.style.display = 'none'; 
+            }
+            else { 
+                linkInput.style.display = 'none'; 
+                locationRow.style.display = 'flex'; 
+                mapLinkRow.style.display = 'flex'; 
+                inputSub.placeholder = "Sala / Despacho"; 
+            }
         }
 
         window.selectWeather = function(el, type) {
@@ -820,6 +852,8 @@
             document.getElementById('inputStart').value = event.timeStart || '';
             document.getElementById('inputEnd').value = event.timeEnd || '';
             document.getElementById('inputTitle').value = event.title || '';
+            // NUEVO: Cargar link del mapa al editar
+            document.getElementById('inputLocationLink').value = event.locationLink || '';
 
             document.querySelectorAll('.color-dot').forEach(d => d.classList.remove('selected'));
             if(event.colorClass) {
@@ -836,7 +870,7 @@
                 if(wBtn) window.selectWeather(wBtn, event.weather);
             }
 
-            if(event.type === 'tournament') { document.getElementById('tourConfig').style.display = 'none'; document.getElementById('titleRow').style.display = 'block'; document.getElementById('labelTitle').innerText = "NOMBRE DEL TORNEO"; document.getElementById('locationRow').style.display = 'flex'; }
+            if(event.type === 'tournament') { document.getElementById('tourConfig').style.display = 'none'; document.getElementById('titleRow').style.display = 'block'; document.getElementById('labelTitle').innerText = "NOMBRE DEL TORNEO"; document.getElementById('locationRow').style.display = 'flex'; document.getElementById('mapLinkRow').style.display = 'flex';}
             if (event.type === 'match') { document.getElementById('inputComp').value = event.competition || 'LIGA'; document.getElementById('inputRival').value = event.rival || ''; }
             if (event.type === 'meeting') { if (event.link) { window.toggleMeetingMode('online'); document.getElementById('inputLink').value = event.link; } else window.toggleMeetingMode('presencial'); }
 
@@ -857,6 +891,8 @@
                 if (tempType !== 'match' && !document.getElementById('inputTitle').value) { alert("Ponle un título"); return; }
                 if (tempType === 'match' && !document.getElementById('inputRival').value) { alert("Indica el rival"); return; }
 
+                const locLink = document.getElementById('inputLocationLink').value || null; // NUEVO: Extraer Mapa
+
                 if (tempType === 'tournament' && !editingId) {
                     const startStr = document.getElementById('tourStart').value;
                     const endStr = document.getElementById('tourEnd').value;
@@ -874,6 +910,7 @@
                             id: sharedId + "_" + key, type: 'tournament',
                             title: document.getElementById('inputTitle').value,
                             subtitle: document.getElementById('inputSub').value || 'Ubicación Torneo',
+                            locationLink: locLink, // GUARDAR MAPA
                             team: document.getElementById('inputTeam').value || '',
                             timeStart: '', timeEnd: '', 
                             colorClass: tempColor, 
@@ -900,6 +937,7 @@
                 const eventData = {
                     type: tempType, title: document.getElementById('inputTitle').value,
                     subtitle: finalSubtitle, link: finalLink,
+                    locationLink: locLink, // GUARDAR MAPA
                     team: document.getElementById('inputTeam').value || '',
                     timeStart: document.getElementById('inputStart').value || '',
                     timeEnd: document.getElementById('inputEnd').value || '',
@@ -937,6 +975,7 @@
             document.getElementById('inputTitle').value = ""; document.getElementById('inputSub').value = "";
             document.getElementById('inputTeam').value = ""; document.getElementById('inputRival').value = "";
             document.getElementById('inputLink').value = "";
+            document.getElementById('inputLocationLink').value = ""; // LIMPIAR MAPA
             document.getElementById('fileNameDisplay').innerText = "Adjuntar Sesión";
             document.getElementById('fileNameDisplay').style.color = "inherit";
             document.getElementById('inputFile').value = "";
