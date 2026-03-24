@@ -210,7 +210,7 @@
                 </div>
 
                 <div id="colorSection">
-                    <label class="input-label">ENFOQUE</label>
+                    <label class="input-label" id="labelColor">COLOR / ENFOQUE</label>
                     <div class="color-picker-row">
                         <div class="color-dot selected" style="background: var(--col-of);" data-class="btn-of" onclick="window.selectColor(this)"></div>
                         <div class="color-dot" style="background: var(--col-def);" data-class="btn-def" onclick="window.selectColor(this)"></div>
@@ -226,7 +226,6 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
         import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
-        // Importamos la Autenticación de Firebase
         import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 
         const firebaseConfig = {
@@ -263,9 +262,7 @@
         document.getElementById('btnWeek').classList.toggle('active', viewMode === 'week');
         document.getElementById('btnMonth').classList.toggle('active', viewMode === 'month');
 
-        // SEGURIDAD: Intentamos login anónimo antes de cargar los datos
         signInAnonymously(auth).then(() => {
-            console.log("Autenticación Anónima Exitosa");
             const eventsRef = ref(db, 'events/');
             onValue(eventsRef, (snapshot) => {
                 eventsDB = snapshot.val() || {};
@@ -273,12 +270,10 @@
                 renderEventsList();
             });
         }).catch((error) => {
-            console.error("Error de Autenticación:", error);
-            // MEJORA: Avisamos del error real para no confundir
             if(error.code === 'auth/operation-not-allowed') {
-                alert("Firebase bloqueado: Tienes que entrar a la consola de Firebase -> Authentication -> Sign-in method y activar 'Anónimo'.");
+                alert("Firebase bloqueado: Activa 'Anónimo' en Authentication.");
             } else {
-                alert("Error al conectar con la base de datos: " + error.message);
+                console.error(error);
             }
         });
 
@@ -511,29 +506,34 @@
             let timeLeft = `<span class="time-start">${event.timeStart}</span><span class="time-end">${event.timeEnd}</span>`;
             if (isTournament) timeLeft = `<span class="time-start" style="font-size:0.6rem;">DÍA</span><span class="time-end" style="color:#f39c12;">TORNEO</span>`;
 
+            // --- LÓGICA DE COLOR UNIVERSAL (Para Partidos, Torneos y Entrenos) ---
+            let c = 'var(--atm-red)';
+            let badgeTextCol = 'white';
+            if(event.colorClass && event.colorClass.includes('of')) { c = 'var(--col-of)'; }
+            if(event.colorClass && event.colorClass.includes('def')) { c = 'var(--col-def)'; }
+            if(event.colorClass && event.colorClass.includes('tac')) { c = 'var(--col-tac)'; }
+            if(event.colorClass && event.colorClass.includes('rein')) { c = 'var(--col-rein)'; badgeTextCol = 'black'; }
+
             if (isMatch) {
-                cardStyle = 'border: 1px solid var(--atm-red); background: linear-gradient(135deg, #1C2C5B, #000);';
-                badgeHTML = `<span class="badge" style="background:var(--atm-red); font-size:0.8rem;">${event.competition || 'PARTIDO'}</span>`;
+                cardStyle = `border: 1px solid ${c}; background: linear-gradient(135deg, #1C2C5B, #000);`;
+                badgeHTML = `<span class="badge" style="background:${c}; color:${badgeTextCol}; font-size:0.8rem;">${event.competition || 'PARTIDO'}</span>`;
                 titleStyle = 'color: #ffffff !important;';
                 subStyle = 'color: #cccccc !important;';
                 if(event.rival) displayTitle = `<span style="font-weight:400; font-size:0.9rem; color:#aaa;">VS</span> <span style="color:white;">${event.rival.toUpperCase()}</span>`;
             } 
             else if (isTournament) {
-                cardStyle = 'border: 1px solid #f1c40f; border-left: 4px solid #f1c40f; background: linear-gradient(135deg, #4A235A, #000000);';
-                badgeHTML = '<span class="badge" style="background:#f1c40f; color:black;">🏆 TORNEO</span>';
+                cardStyle = `border: 1px solid ${c}; border-left: 4px solid ${c}; background: linear-gradient(135deg, #4A235A, #000000);`;
+                badgeHTML = `<span class="badge" style="background:${c}; color:${badgeTextCol};">🏆 TORNEO</span>`;
                 titleStyle = 'color: #ffffff !important;';
-                subStyle = 'color: #f1c40f !important; font-weight:600;';
+                subStyle = `color: ${c} !important; font-weight:600;`;
             }
             else if (event.type === 'meeting') {
                 cardStyle = 'border-left: 4px solid #3498db; background: var(--bg-card);';
-                badgeHTML = '<span class="badge" style="background:#3498db">REUNIÓN</span>';
+                badgeHTML = '<span class="badge" style="background:#3498db; color:white;">REUNIÓN</span>';
             } 
             else {
-                let c = 'var(--atm-red)';
-                if(event.colorClass.includes('of')) c = 'var(--col-of)';
-                if(event.colorClass.includes('def')) c = 'var(--col-def)';
-                if(event.colorClass.includes('tac')) c = 'var(--col-tac)';
-                badgeHTML = `<span class="badge" style="background:${c}">ENTRENO</span>`;
+                cardStyle = `border-left: 4px solid ${c}; background: var(--bg-card);`;
+                badgeHTML = `<span class="badge" style="background:${c}; color:${badgeTextCol};">ENTRENO</span>`;
             }
 
             if (event.team) {
@@ -666,14 +666,30 @@
 
             matchConfig.style.display = 'none'; tourConfig.style.display = 'none';
             titleRow.style.display = 'block'; meetConfig.style.display = 'none';
-            colorSec.style.display = 'block'; locationRow.style.display = 'flex';
+            
+            // LA SECCIÓN DE COLOR AHORA SE MUESTRA SIEMPRE (Excepto Reunión)
+            colorSec.style.display = 'block'; 
+            
+            locationRow.style.display = 'flex';
             timeRow.style.display = 'flex'; weatherSec.style.display = 'block';
             document.getElementById('labelTitle').innerText = "TÍTULO SESIÓN";
             inputSub.placeholder = "Ubicación (Campo/Estadio)";
 
-            if (tempType === 'match') { matchConfig.style.display = 'block'; titleRow.style.display = 'none'; colorSec.style.display = 'none'; }
-            else if (tempType === 'meeting') { meetConfig.style.display = 'block'; colorSec.style.display = 'none'; weatherSec.style.display = 'none'; window.toggleMeetingMode('presencial'); }
-            else if (tempType === 'tournament') { tourConfig.style.display = 'block'; timeRow.style.display = 'none'; colorSec.style.display = 'none'; document.getElementById('labelTitle').innerText = "NOMBRE DEL TORNEO"; }
+            if (tempType === 'match') { 
+                matchConfig.style.display = 'block'; titleRow.style.display = 'none'; 
+                document.getElementById('labelColor').innerText = "COLOR DE ETIQUETA / EQUIPO";
+            }
+            else if (tempType === 'meeting') { 
+                meetConfig.style.display = 'block'; colorSec.style.display = 'none'; weatherSec.style.display = 'none'; window.toggleMeetingMode('presencial'); 
+            }
+            else if (tempType === 'tournament') { 
+                tourConfig.style.display = 'block'; timeRow.style.display = 'none'; 
+                document.getElementById('labelTitle').innerText = "NOMBRE DEL TORNEO"; 
+                document.getElementById('labelColor').innerText = "COLOR DE ETIQUETA / EQUIPO";
+            } 
+            else {
+                document.getElementById('labelColor').innerText = "COLOR / ENFOQUE";
+            }
         }
 
         window.toggleMeetingMode = function(mode) {
@@ -790,6 +806,14 @@
             document.getElementById('inputEnd').value = event.timeEnd || '';
             document.getElementById('inputTitle').value = event.title || '';
 
+            // Resetea el color antes de seleccionar
+            document.querySelectorAll('.color-dot').forEach(d => d.classList.remove('selected'));
+            if(event.colorClass) {
+                tempColor = event.colorClass;
+                const cBtn = document.querySelector(`.color-dot[data-class="${event.colorClass}"]`);
+                if (cBtn) cBtn.classList.add('selected');
+            }
+
             const typeBtn = document.querySelector(`.segment-option[data-val="${event.type}"]`);
             if(typeBtn) window.selectType(typeBtn);
 
@@ -837,7 +861,9 @@
                             title: document.getElementById('inputTitle').value,
                             subtitle: document.getElementById('inputSub').value || 'Ubicación Torneo',
                             team: document.getElementById('inputTeam').value || '',
-                            timeStart: '', timeEnd: '', colorClass: 'btn-rein', weather: tempWeather, 
+                            timeStart: '', timeEnd: '', 
+                            colorClass: tempColor, // GUARDA EL COLOR ELEGIDO
+                            weather: tempWeather, 
                             fileData: tempFileBase64 || null,
                             isCanceled: false
                         });
@@ -863,7 +889,7 @@
                     team: document.getElementById('inputTeam').value || '',
                     timeStart: document.getElementById('inputStart').value || '',
                     timeEnd: document.getElementById('inputEnd').value || '',
-                    colorClass: tempColor, 
+                    colorClass: tempColor, // GUARDA EL COLOR ELEGIDO
                     fileData: tempFileBase64 || null, 
                     competition: document.getElementById('inputComp').value,
                     rival: document.getElementById('inputRival').value, weather: tempWeather
@@ -873,7 +899,7 @@
                     const idx = eventsDB[key].findIndex(e => String(e.id) === String(editingId));
                     if (idx !== -1) {
                         if(eventsDB[key][idx].type === 'tournament') {
-                            eventData.type = 'tournament'; eventData.colorClass = 'btn-rein'; 
+                            eventData.type = 'tournament'; 
                             eventData.timeStart = ''; eventData.timeEnd = '';
                         }
                         eventsDB[key][idx] = { ...eventData, id: eventsDB[key][idx].id, isCanceled: eventsDB[key][idx].isCanceled || false }; 
@@ -901,11 +927,17 @@
             document.getElementById('fileNameDisplay').style.color = "inherit";
             document.getElementById('inputFile').value = "";
             tempFileBase64 = null; editingId = null; tempWeather = 'sun';
+            
+            // Volver al Verde por defecto
+            tempColor = 'btn-of';
+            document.querySelectorAll('.color-dot').forEach(d => d.classList.remove('selected'));
+            document.querySelector('.color-dot[data-class="btn-of"]').classList.add('selected');
+            
             document.querySelectorAll('.weather-option').forEach(d => d.classList.remove('selected'));
             document.querySelector('.weather-option[data-w="sun"]').classList.add('selected');
         }
 
-        // INICIO
+        // INICIO 
         initLiveWeather();
         updateHeader();
         renderDates();
